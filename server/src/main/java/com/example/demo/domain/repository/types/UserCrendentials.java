@@ -1,9 +1,8 @@
 package com.example.demo.domain.repository.types;
 
-import java.security.Timestamp;
+
 import java.sql.Time;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -20,21 +19,16 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Entity
-@Table(name="user")
-public class User {
+@Table(name="user_credentials")
+public class UserCrendentials {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long t_id;
-
-    @Column
-    private String name;
+    @OneToOne
+    @JoinColumn(name = "user_t_id")
+    private User user;
+    
+    @Column(unique = true)
+    private Long user_t_id;
 
     @Column(nullable = false)
-    private Timestamp created_at;
-
-    @Column(nullable =  false)
-    private Timestamp update_at;
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false)
-    private UserCrendentials userCrendentials;
+    private String hashed_password;
 }
