@@ -1,7 +1,5 @@
 .gradle/
 build/
-!gradle-wrapper.jar
-!gradle-wrapper.properties
 
 node_modules/
 

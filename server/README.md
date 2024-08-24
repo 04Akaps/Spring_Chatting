@@ -7,7 +7,9 @@ CREATE TABLE user (
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT 0 ON UPDATE CURRENT_TIMESTAMP
 );
+```
 
+```
 CREATE TABLE user_credentials (
     user_t_id BIGINT UNIQUE,
     hashed_password CHAR(60) NOT NULL
