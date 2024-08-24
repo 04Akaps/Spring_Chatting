@@ -14,8 +14,9 @@ import com.example.demo.domain.auth.model.response.VerfiyTokenResponse;
 import com.example.demo.domain.auth.model.response.VerifyUserResponse;
 import com.example.demo.domain.auth.service.AuthService;
 
+import org.springframework.web.bind.annotation.*;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -53,7 +54,7 @@ public class AuthControllerV1 {
         summary = "User를 인증합니다.", 
         description = "User 인증"
     )
-    @GetMapping("/verify-user/{email}")
+    @GetMapping("/verify-user/{user}")
     public VerifyUserResponse verifyUser(
         @RequestParam @Valid VerifyUserRequest request
     ) {

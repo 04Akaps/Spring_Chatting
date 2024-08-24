@@ -24,14 +24,14 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long t_id;
 
-    @Column
+    @Column(nullable = false)
     private String name;
 
-    @Column(nullable = false)
+    @Column
     private Timestamp created_at;
 
-    @Column(nullable =  false)
-    private Timestamp update_at;
+    @Column
+    private Timestamp updated_at;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false)
     private UserCrendentials userCrendentials;

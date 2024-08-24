@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RedisService {
     private final RedisTemplate<String, String> redisTemplate;
 
-    // Config로 관리 가능
     private Duration defaultExpireTime = Duration.ofMinutes(5);
 
     public String getValue(String key) {

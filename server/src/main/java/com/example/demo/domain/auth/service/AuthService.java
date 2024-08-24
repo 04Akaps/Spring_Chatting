@@ -5,6 +5,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.common.code.ErrorCode;
 import com.example.demo.common.exception.CustomException;
+import com.example.demo.common.redis.RedisService;
 import com.example.demo.domain.auth.model.request.CreateUserRequest;
 import com.example.demo.domain.auth.model.request.LoginRequest;
 import com.example.demo.domain.auth.model.request.VerifyTokenRequest;
@@ -17,6 +18,7 @@ import com.example.demo.domain.repository.UserRepository;
 import com.example.demo.domain.repository.types.User;
 import com.example.demo.domain.repository.types.UserCrendentials;
 import com.example.demo.security.Hasher;
+import com.example.demo.security.JWTProvider;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ import java.util.Optional;
 public class AuthService {
 
     private final UserRepository userRepository;
+    private final RedisService redisService;
     private final Hasher hasher;
     
     @Transactional(transactionManager = "createUserTransactionManager")
@@ -40,7 +43,9 @@ public class AuthService {
             throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
+
         try {
+            // TODO -> user, crendetionals 분리
             User savedUser = userRepository.save(this.newUser(request.name(), request.password()));
 
             if (savedUser == null) {
@@ -55,10 +60,41 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-        
 
-        // TOken
-        return new LoginResponse("test");
+        Optional<User> user =  userRepository.findByName(request.name());
+        
+        if (!user.isPresent()) {
+            log.error("Already Exist User {}", request.name());
+            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
+        }
+
+        String hasherPassword = user
+        .map(u -> {
+            String passwordHash = hasher.getHashingValue(request.password());
+
+            // 해시 비밀번호 비교
+            if (!u.getUserCrendentials().getHashed_password().equals(passwordHash)) {
+                log.error("Password Check Failed : {}", request.name());
+                throw new CustomException(ErrorCode.LOGIN_PASSWORD_FAILED);
+            }
+            return passwordHash; // return the valid hash
+        })
+        .orElseThrow(() -> {
+            log.error("User not found: {}", request.name());
+            return new CustomException(ErrorCode.LOGIN_PASSWORD_FAILED);
+        });
+
+        String key = this.userRedisKey(request.name(), hasherPassword);
+        String token = JWTProvider.createToken(key);
+
+        try {
+            redisService.setData(key, token);   
+        } catch (Exception e) {
+            log.error("Save Failed {}", e.getMessage());
+            throw new CustomException(ErrorCode.REDIS_SAVE_FAILED);
+        }
+    
+        return new LoginResponse(token);
     }
 
     @Transactional(transactionManager = "verifyUserTransactionManager")
@@ -75,10 +111,14 @@ public class AuthService {
     }
 
 
+    private String userRedisKey(String name, String hash)  {
+        String baseKey = name + hash;
+        return hasher.getHashingValue(baseKey);
+    }
+
     private User newUser(String name, String password) {
         User newUser = User.builder().
         name(name).
-        userCrendentials(this.newUserCrendentials(password)).
         build();
         
         return newUser;
@@ -91,7 +131,5 @@ public class AuthService {
         build();
         return cre;
     }
-
-
 
 }

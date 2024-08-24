@@ -13,3 +13,8 @@ spring:
     host: localhost:6379
     port: 6379
     password: root
+token:
+  secret-key: "SECRET"
+  refresh-secret-key: "REFRESH_SECRET"
+  token-time: 300
+  refresh-token-time: 300
