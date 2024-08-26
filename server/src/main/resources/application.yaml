@@ -10,8 +10,9 @@ spring:
     password: root
     driver-class-name: com.mysql.jdbc.Driver
   redis:
-    host: localhost:6379
+    host: 127.0.0.1
     port: 6379
+    user: ""
     password: root
 token:
   secret-key: "SECRET"

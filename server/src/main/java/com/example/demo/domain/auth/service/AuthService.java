@@ -25,6 +25,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
 
+import javax.sound.midi.SysexMessage;
+
+import java.sql.Timestamp;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -43,10 +47,14 @@ public class AuthService {
             throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
         }
 
-
         try {
             // TODO -> user, crendetionals 분리
-            User savedUser = userRepository.save(this.newUser(request.name(), request.password()));
+
+            User newUser = this.newUser(request.name());
+            UserCrendentials userCrendentials = this.newUserCrendentials(request.password(), newUser);
+            newUser.setCredentials(userCrendentials);
+
+            User savedUser = userRepository.save(newUser);
 
             if (savedUser == null) {
                 log.error("Saving User Failed {}", request.name());
@@ -90,18 +98,11 @@ public class AuthService {
         try {
             redisService.setData(key, token);   
         } catch (Exception e) {
-            log.error("Save Failed {}", e.getMessage());
+            log.error("Redis Save Failed : {}", e.getMessage());
             throw new CustomException(ErrorCode.REDIS_SAVE_FAILED);
         }
     
         return new LoginResponse(token);
-    }
-
-    @Transactional(transactionManager = "verifyUserTransactionManager")
-    public VerifyUserResponse verifyUser(VerifyUserRequest request) {
-        // TODO
-
-        return new VerifyUserResponse(request.email());
     }
 
     public VerfiyTokenResponse verifyToken(VerifyTokenRequest request) {
@@ -116,18 +117,22 @@ public class AuthService {
         return hasher.getHashingValue(baseKey);
     }
 
-    private User newUser(String name, String password) {
+    private User newUser(String name) {
         User newUser = User.builder().
         name(name).
+        created_at(new Timestamp(System.currentTimeMillis())).
         build();
         
         return newUser;
     }
 
-    private UserCrendentials newUserCrendentials(String password) {
+    private UserCrendentials newUserCrendentials(String password, User user) {
+        String hashValue = hasher.getHashingValue(password);
+
         UserCrendentials cre = UserCrendentials.
         builder().
-        hashed_password(hasher.getHashingValue(password)).
+        user(user).
+        hashed_password(hashValue).
         build();
         return cre;
     }

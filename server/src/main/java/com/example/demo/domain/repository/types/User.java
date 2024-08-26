@@ -1,6 +1,6 @@
 package com.example.demo.domain.repository.types;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -30,9 +30,10 @@ public class User {
     @Column
     private Timestamp created_at;
 
-    @Column
-    private Timestamp updated_at;
-
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, optional = false)
     private UserCrendentials userCrendentials;
+
+    public void setCredentials(UserCrendentials cred) {
+        this.userCrendentials = cred;
+    }
 }
