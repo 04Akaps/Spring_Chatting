@@ -64,6 +64,11 @@ public class JWTProvider {
                 .sign(Algorithm.HMAC256(refreshSecretKey));
     }
 
+    public String getUserNameFromJwt(String jwt) {
+        DecodedJWT decodedjwt = decodedJWT(jwt);
+        return decodedjwt.getSubject();
+    }
+
     public static DecodedJWT checkAccessTokenForRefresh(String token) {
         try {
             DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(secretKey)).build().verify(token);

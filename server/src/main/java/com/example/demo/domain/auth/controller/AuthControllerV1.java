@@ -45,15 +45,4 @@ public class AuthControllerV1 {
     ) {
         return authService.login(request);
     }
-    
-    @Operation(
-        summary = "Token을 기반으로 인증합니다.", 
-        description = "Token 인증"
-    )
-    @GetMapping("/verify-token/{token}")
-    public VerfiyTokenResponse verifyLogin(
-        @RequestParam @Valid VerifyTokenRequest request
-    ) {
-        return authService.verifyToken(request);
-    }
 }

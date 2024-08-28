@@ -4,6 +4,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.example.demo.common.code.ErrorCode;
+import com.example.demo.common.constrants.Constants;
 import com.example.demo.common.exception.CustomException;
 import com.example.demo.common.redis.RedisService;
 import com.example.demo.domain.auth.model.request.CreateUserRequest;
@@ -92,10 +93,11 @@ public class AuthService {
             return new CustomException(ErrorCode.LOGIN_PASSWORD_FAILED);
         });
 
-        String key = this.userRedisKey(request.name(), hasherPassword);
-        String token = JWTProvider.createToken(key);
+        String key = this.userRedisKey(request.name());
+        String token = JWTProvider.createToken(request.name());
 
         try {
+            // TODO Token Data
             redisService.setData(key, token);   
         } catch (Exception e) {
             log.error("Redis Save Failed : {}", e.getMessage());
@@ -105,15 +107,8 @@ public class AuthService {
         return new LoginResponse(token);
     }
 
-    public VerfiyTokenResponse verifyToken(VerifyTokenRequest request) {
-        // TODO Redis
-
-        return new VerfiyTokenResponse(true);
-    }
-
-
-    private String userRedisKey(String name, String hash)  {
-        String baseKey = name + hash;
+    private String userRedisKey(String name)  {
+        String baseKey = Constants.AUTH_CACHE_KEY + "-" + name;
         return hasher.getHashingValue(baseKey);
     }
 
