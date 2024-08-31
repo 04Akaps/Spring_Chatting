@@ -15,7 +15,11 @@ import com.example.demo.domain.auth.model.response.CreateUserResponse;
 import com.example.demo.domain.auth.model.response.LoginResponse;
 import com.example.demo.domain.auth.model.response.VerfiyTokenResponse;
 import com.example.demo.domain.auth.model.response.VerifyUserResponse;
+import com.example.demo.domain.chat.model.Message;
+import com.example.demo.domain.chat.service.ChatService;
+import com.example.demo.domain.repository.ChatRepository;
 import com.example.demo.domain.repository.UserRepository;
+import com.example.demo.domain.repository.types.Chat;
 import com.example.demo.domain.repository.types.User;
 import com.example.demo.domain.repository.types.UserCrendentials;
 import com.example.demo.security.Hasher;
@@ -49,8 +53,6 @@ public class AuthService {
         }
 
         try {
-            // TODO -> user, crendetionals 분리
-
             User newUser = this.newUser(request.name());
             UserCrendentials userCrendentials = this.newUserCrendentials(request.password(), newUser);
             newUser.setCredentials(userCrendentials);

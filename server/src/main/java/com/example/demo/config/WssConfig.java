@@ -7,21 +7,20 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.server.standard.ServletServerContainerFactoryBean;
 
+import com.example.demo.component.WssHandler;
+
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSocket
+@RequiredArgsConstructor
 public class WssConfig implements WebSocketConfigurer {
 
-    // private final 
+    private final WssHandler wssHandler;
 
-    // // @Bean
-    // // public ServeletServerConta
-
-    //  // 요청은 핸들러로 라우트 되고
-    // // beforeHandshake메소드에서 헤더 중 필요한 값을 가져와 true값 반환하면 Upgrade 헤더와 함께 101 Switching Protocols 상태 코드를 포함한 응답 반환
-    
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(null, "/ws/v1/chat").setAllowedOrigins("*");
+        registry.addHandler(wssHandler, "/ws/v1/chat").setAllowedOrigins("*");
         // registry.addHandler(socketHandler, "/wss/chat")
         //         .addInterceptors(new HttpSessionHandshakeInterceptor(), new CustomHandshakeInterceptor())
         //         .setAllowedOrigins("https:/~~/chatting("서버url");

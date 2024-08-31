@@ -1,13 +1,25 @@
 import { cookies } from "next/headers";
 import { ChatLayout } from "@/components/chat/chat-layout";
-import { GitHubLogoIcon } from "@radix-ui/react-icons";
-import { cn } from "@/lib/utils";
-import { buttonVariants } from "@/components/ui/button";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import { useEffect } from "react";
 
 export default function Home() {
+  const router = useRouter();
+
   const layout = cookies().get("react-resizable-panels:layout");
   const defaultLayout = layout ? JSON.parse(layout.value) : undefined;
+
+  useEffect(() => {
+    const authCookie = cookies().get("auth");
+    if (!authCookie) {
+      router.push("/login");
+    }
+  }, [router]);
+
+  if (typeof window !== "undefined" && !cookies().get("auth")) {
+    return <div>Loading...</div>;
+  }
 
   return (
     // TODO 로그인 유무 처리

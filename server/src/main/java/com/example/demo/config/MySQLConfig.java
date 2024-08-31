@@ -35,18 +35,14 @@ public class MySQLConfig {
         return dataSource;
     }
 
-    @Bean(name = "createAccountTransactionManager")
-    public PlatformTransactionManager createAccountTransactionManager(DataSource dataSource) {
-        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
-
-        return transactionManager;
+    @Bean
+    public DataSourceTransactionManager transactionManager(DataSource dataSource) {
+        return new DataSourceTransactionManager(dataSource);
     }
 
-    @Bean(name = "verifyQrTransactionManager")
-    public PlatformTransactionManager verifyQrTransactionManager(DataSource dataSource) {
-        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
-
-        return transactionManager;
+    @Bean
+    public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
+        return new TransactionTemplate(transactionManager);
     }
 
     @Bean(name = "createUserTransactionManager")
@@ -56,15 +52,10 @@ public class MySQLConfig {
         return transactionManager;
     }
 
-    @Bean(name = "verifyUserTransactionManager")
-    public PlatformTransactionManager verifyUserTransactionManager(DataSource dataSource) {
+    @Bean(name = "chatTransactionManager")
+    public PlatformTransactionManager chatTransactionManager(DataSource dataSource) {
         DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
-
+        transactionManager.setGlobalRollbackOnParticipationFailure(true);
         return transactionManager;
-    }
-
-    @Bean
-    public DataSourceTransactionManager transactionManager(DataSource dataSource) {
-        return new DataSourceTransactionManager(dataSource);
     }
 }
