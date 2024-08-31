@@ -1,24 +1,15 @@
 import { cookies } from "next/headers";
 import { ChatLayout } from "@/components/chat/chat-layout";
 import Link from "next/link";
-import { useRouter } from "next/router";
-import { useEffect } from "react";
+import { redirect } from "next/navigation";
 
 export default function Home() {
-  const router = useRouter();
-
   const layout = cookies().get("react-resizable-panels:layout");
   const defaultLayout = layout ? JSON.parse(layout.value) : undefined;
+  const authCookie = cookies().get("auth");
 
-  useEffect(() => {
-    const authCookie = cookies().get("auth");
-    if (!authCookie) {
-      router.push("/login");
-    }
-  }, [router]);
-
-  if (typeof window !== "undefined" && !cookies().get("auth")) {
-    return <div>Loading...</div>;
+  if (!authCookie) {
+    redirect("/login");
   }
 
   return (
