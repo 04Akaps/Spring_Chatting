@@ -3,6 +3,8 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import "./auth.css";
+import api from "@/lib/axios";
+import axios from "axios";
 
 export default function Login() {
   const [username, setUsername] = useState<string>("");
@@ -22,7 +24,18 @@ export default function Login() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     // Add login logic here
-    document.cookie = "auth=your-auth-token; path=/"; // Set the auth cookie
+
+    const result = await api.post("/api/v1/auth/login", {
+      name: username,
+      password: password,
+    });
+
+    if (!result.data.token) {
+      alert("존재하지 않은 User 입니다.");
+      return;
+    }
+
+    document.cookie = `auth=${result.data.token}; path=/`;
     router.push("/");
   };
 

@@ -2,12 +2,8 @@ package com.example.demo.domain.auth.controller;
 
 import com.example.demo.domain.auth.model.request.CreateUserRequest;
 import com.example.demo.domain.auth.model.request.LoginRequest;
-import com.example.demo.domain.auth.model.request.VerifyTokenRequest;
-import com.example.demo.domain.auth.model.request.VerifyUserRequest;
 import com.example.demo.domain.auth.model.response.CreateUserResponse;
 import com.example.demo.domain.auth.model.response.LoginResponse;
-import com.example.demo.domain.auth.model.response.VerfiyTokenResponse;
-import com.example.demo.domain.auth.model.response.VerifyUserResponse;
 import com.example.demo.domain.auth.service.AuthService;
 
 import org.springframework.web.bind.annotation.*;
@@ -44,5 +40,17 @@ public class AuthControllerV1 {
         @RequestBody @Valid LoginRequest request
     ) {
         return authService.login(request);
+    }
+
+
+    @Operation(
+        summary = "Token Verify",
+        description = "Token을 통한 User 이름 가져오기"
+    )
+    @GetMapping("/verify-token/{token}")
+    public String getUserFromToken(
+        @PathVariable("token") String token
+    ) {
+        return authService.getUserFromToken(token);
     }
 }

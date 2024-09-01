@@ -6,20 +6,11 @@ import org.springframework.transaction.annotation.Transactional;
 import com.example.demo.common.code.ErrorCode;
 import com.example.demo.common.constrants.Constants;
 import com.example.demo.common.exception.CustomException;
-import com.example.demo.common.redis.RedisService;
 import com.example.demo.domain.auth.model.request.CreateUserRequest;
 import com.example.demo.domain.auth.model.request.LoginRequest;
-import com.example.demo.domain.auth.model.request.VerifyTokenRequest;
-import com.example.demo.domain.auth.model.request.VerifyUserRequest;
 import com.example.demo.domain.auth.model.response.CreateUserResponse;
 import com.example.demo.domain.auth.model.response.LoginResponse;
-import com.example.demo.domain.auth.model.response.VerfiyTokenResponse;
-import com.example.demo.domain.auth.model.response.VerifyUserResponse;
-import com.example.demo.domain.chat.model.Message;
-import com.example.demo.domain.chat.service.ChatService;
-import com.example.demo.domain.repository.ChatRepository;
 import com.example.demo.domain.repository.UserRepository;
-import com.example.demo.domain.repository.types.Chat;
 import com.example.demo.domain.repository.types.User;
 import com.example.demo.domain.repository.types.UserCrendentials;
 import com.example.demo.security.Hasher;
@@ -29,9 +20,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Optional;
-
-import javax.sound.midi.SysexMessage;
-
 import java.sql.Timestamp;
 
 @Slf4j
@@ -40,7 +28,6 @@ import java.sql.Timestamp;
 public class AuthService {
 
     private final UserRepository userRepository;
-    private final RedisService redisService;
     private final Hasher hasher;
     
     @Transactional(transactionManager = "createUserTransactionManager")
@@ -71,12 +58,12 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
-
         Optional<User> user =  userRepository.findByName(request.name());
         
         if (!user.isPresent()) {
-            log.error("Already Exist User {}", request.name());
-            throw new CustomException(ErrorCode.USER_ALREADY_EXISTS);
+            log.error("Not Exist User {}", request.name());
+            return new LoginResponse(ErrorCode.NOT_EXISTED_USER, "");
+            // throw new CustomException(ErrorCode.NOT_EXISTED_USER);
         }
 
         String hasherPassword = user
@@ -95,23 +82,12 @@ public class AuthService {
             return new CustomException(ErrorCode.LOGIN_PASSWORD_FAILED);
         });
 
-        String key = this.userRedisKey(request.name());
-        String token = JWTProvider.createToken(request.name());
-
-        try {
-            // TODO Token Data
-            redisService.setData(key, token);   
-        } catch (Exception e) {
-            log.error("Redis Save Failed : {}", e.getMessage());
-            throw new CustomException(ErrorCode.REDIS_SAVE_FAILED);
-        }
-    
-        return new LoginResponse(token);
+        String token = JWTProvider.createToken(request.name());    
+        return new LoginResponse(ErrorCode.SUCCESS,token);
     }
 
-    private String userRedisKey(String name)  {
-        String baseKey = Constants.AUTH_CACHE_KEY + "-" + name;
-        return hasher.getHashingValue(baseKey);
+    public String getUserFromToken(String token) {
+        return JWTProvider.getUserNameFromJwt(token);
     }
 
     private User newUser(String name) {

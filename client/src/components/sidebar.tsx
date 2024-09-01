@@ -28,13 +28,38 @@ import {
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import "@mui/material/styles"; // MUI 스타일 추가
+import api from "@/lib/axios";
 
 interface SidebarProps {
   isCollapsed: boolean;
   links: User[];
+  setConnectedUsers: React.Dispatch<React.SetStateAction<User[]>>;
+  setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-export function Sidebar({ links, isCollapsed }: SidebarProps) {
+const searchResult = (name: string): User => {
+  return {
+    id: 0,
+    name,
+    messages: [], // 기본값으로 빈 배열
+  };
+};
+
+export const fetchUsers = async (searchQuery: string): Promise<User[]> => {
+  const response = await api.get(`/api/v1/user/search/${searchQuery}`);
+  const names = response.data.name;
+  // console.log(names);
+
+  // ID는 단순히 배열 인덱스를 사용하는 것으로 가정
+  return names.map((n: string) => searchResult(n));
+};
+
+export function Sidebar({
+  links,
+  isCollapsed,
+  setConnectedUsers,
+  setSelectedUser,
+}: SidebarProps) {
   const [showModal, setShowModal] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
   const [searchResults, setSearchResults] = React.useState<User[]>([]);
@@ -47,11 +72,34 @@ export function Sidebar({ links, isCollapsed }: SidebarProps) {
     setShowModal(false);
   };
 
-  const handleSearchQueryChange = (
+  const handleSearchQueryChange = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
     const query = event.target.value;
+
     setSearchQuery(query);
+  };
+
+  const handelSearchButton = async (event: any) => {
+    const users = await fetchUsers(searchQuery);
+    setSearchResults(users);
+  };
+
+  const addFriends = async (user: User) => {
+    setConnectedUsers((prevUsers) => {
+      // user.id가 이미 prevUsers 배열에 있는지 확인
+      const userExists = prevUsers.some(
+        (existingUser) => existingUser.id === user.id
+      );
+
+      if (userExists) {
+        // 이미 존재하는 경우 아무것도 하지 않음
+        return prevUsers;
+      }
+
+      // 존재하지 않는 경우에만 추가
+      return [...prevUsers, user];
+    });
   };
 
   return (
@@ -70,7 +118,7 @@ export function Sidebar({ links, isCollapsed }: SidebarProps) {
               InputProps={{
                 endAdornment: (
                   <IconButton edge="end" color="primary">
-                    <SearchIcon />
+                    <SearchIcon onClick={handelSearchButton} />
                   </IconButton>
                 ),
               }}
@@ -80,7 +128,12 @@ export function Sidebar({ links, isCollapsed }: SidebarProps) {
             {searchResults.length > 0 ? (
               searchResults.map((user, index) => (
                 <ListItem key={index}>
-                  {/* <ListItemText primary={result} /> */}
+                  <ListItemText
+                    primary={user.name}
+                    onClick={() => {
+                      addFriends(user);
+                    }}
+                  />
                 </ListItem>
               ))
             ) : (
@@ -124,15 +177,6 @@ export function Sidebar({ links, isCollapsed }: SidebarProps) {
                       "dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white"
                     )}
                   >
-                    <Avatar className="flex justify-center items-center">
-                      <AvatarImage
-                        src={link.avatar}
-                        alt={link.avatar}
-                        width={6}
-                        height={6}
-                        className="w-10 h-10 "
-                      />
-                    </Avatar>{" "}
                     <span className="sr-only">{link.name}</span>
                   </Link>
                 </TooltipTrigger>
@@ -152,16 +196,10 @@ export function Sidebar({ links, isCollapsed }: SidebarProps) {
                 buttonVariants({ variant: "grey", size: "xl" }), // link.variant === "grey" &&
                 "dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white shrink"
               )}
+              onClick={() => {
+                setSelectedUser(link);
+              }}
             >
-              <Avatar className="flex justify-center items-center">
-                <AvatarImage
-                  src={link.avatar}
-                  alt={link.avatar}
-                  width={6}
-                  height={6}
-                  className="w-10 h-10 "
-                />
-              </Avatar>
               <div className="flex flex-col max-w-28">
                 <span>{link.name}</span>
                 {link.messages.length > 0 && (

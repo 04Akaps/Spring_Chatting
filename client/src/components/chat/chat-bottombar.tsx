@@ -19,15 +19,11 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface ChatBottombarProps {
   sendMessage: (newMessage: Message) => void;
-  isMobile: boolean;
 }
 
 export const BottombarIcons = [{ icon: FileImage }, { icon: Paperclip }];
 
-export default function ChatBottombar({
-  sendMessage,
-  isMobile,
-}: ChatBottombarProps) {
+export default function ChatBottombar({ sendMessage }: ChatBottombarProps) {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -35,23 +31,11 @@ export default function ChatBottombar({
     setMessage(event.target.value);
   };
 
-  const handleThumbsUp = () => {
-    const newMessage: Message = {
-      id: message.length + 1,
-      name: loggedInUserData.name,
-      avatar: loggedInUserData.avatar,
-      message: "👍",
-    };
-    sendMessage(newMessage);
-    setMessage("");
-  };
-
   const handleSend = () => {
     if (message.trim()) {
       const newMessage: Message = {
         id: message.length + 1,
         name: loggedInUserData.name,
-        avatar: loggedInUserData.avatar,
         message: message.trim(),
       };
       sendMessage(newMessage);

@@ -9,14 +9,12 @@ interface ChatListProps {
   messages?: Message[];
   selectedUser: User;
   sendMessage: (newMessage: Message) => void;
-  isMobile: boolean;
 }
 
 export function ChatList({
   messages,
   selectedUser,
   sendMessage,
-  isMobile,
 }: ChatListProps) {
   const messagesContainerRef = useRef<HTMLDivElement>(null);
 
@@ -61,12 +59,7 @@ export function ChatList({
               <div className="flex gap-3 items-center">
                 {message.name === selectedUser.name && (
                   <Avatar className="flex justify-center items-center">
-                    <AvatarImage
-                      src={message.avatar}
-                      alt={message.name}
-                      width={6}
-                      height={6}
-                    />
+                    <AvatarImage alt={message.name} width={6} height={6} />
                   </Avatar>
                 )}
                 <span className=" bg-accent p-3 rounded-md max-w-xs">
@@ -74,12 +67,7 @@ export function ChatList({
                 </span>
                 {message.name !== selectedUser.name && (
                   <Avatar className="flex justify-center items-center">
-                    <AvatarImage
-                      src={message.avatar}
-                      alt={message.name}
-                      width={6}
-                      height={6}
-                    />
+                    <AvatarImage alt={message.name} width={6} height={6} />
                   </Avatar>
                 )}
               </div>
@@ -87,7 +75,7 @@ export function ChatList({
           ))}
         </AnimatePresence>
       </div>
-      <ChatBottombar sendMessage={sendMessage} isMobile={isMobile} />
+      <ChatBottombar sendMessage={sendMessage} />
     </div>
   );
 }

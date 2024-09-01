@@ -10,11 +10,19 @@ import { cn } from "@/lib/utils";
 import { Sidebar } from "../sidebar";
 import { Chat } from "./chat";
 import { User } from "@/app/data";
+import api from "@/lib/axios";
+import { redirect } from "next/navigation";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined;
   defaultCollapsed?: boolean;
   navCollapsedSize: number;
+}
+
+function getCookie(name: string): string | undefined {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift();
 }
 
 export function ChatLayout({
@@ -25,23 +33,23 @@ export function ChatLayout({
   const [connectedUsers, setConnectedUsers] = React.useState<User[]>([]);
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const [me, setMe] = React.useState<User>();
 
   useEffect(() => {
-    const checkScreenWidth = () => {
-      setIsMobile(window.innerWidth <= 768);
+    const authCookie = getCookie("auth");
+
+    if (!authCookie) {
+      redirect("/login");
+    }
+
+    const verifyAuthToken = async () => {
+      const result = await api.get(`/api/v1/auth/verify-token/${authCookie}`);
+      setMe(result.data);
     };
 
-    // Initial check
-    checkScreenWidth();
+    verifyAuthToken();
 
-    // Event listener for screen width changes
-    window.addEventListener("resize", checkScreenWidth);
-
-    // Cleanup the event listener on component unmount
-    return () => {
-      window.removeEventListener("resize", checkScreenWidth);
-    };
+    return () => {};
   }, []);
 
   return (
@@ -58,8 +66,8 @@ export function ChatLayout({
         defaultSize={defaultLayout[0]}
         collapsedSize={navCollapsedSize}
         collapsible={true}
-        minSize={isMobile ? 0 : 24}
-        maxSize={isMobile ? 8 : 30}
+        minSize={24}
+        maxSize={30}
         onCollapse={() => {
           setIsCollapsed(true);
           document.cookie = `react-resizable-panels:collapsed=${JSON.stringify(
@@ -77,7 +85,12 @@ export function ChatLayout({
             "min-w-[50px] md:min-w-[70px] transition-all duration-300 ease-in-out"
         )}
       >
-        <Sidebar isCollapsed={isCollapsed} links={connectedUsers} />
+        <Sidebar
+          isCollapsed={isCollapsed}
+          links={connectedUsers}
+          setConnectedUsers={setConnectedUsers}
+          setSelectedUser={setSelectedUser}
+        />
       </ResizablePanel>
 
       {selectedUser && (
@@ -85,7 +98,10 @@ export function ChatLayout({
           <ResizableHandle withHandle />
 
           <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
-            <Chat selectedUser={selectedUser} isMobile={isMobile} />
+            <Chat
+              selectedUser={selectedUser}
+              setSelectedUser={setSelectedUser}
+            />
           </ResizablePanel>
         </>
       )}

@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import "./auth.css";
+import api from "@/lib/axios";
 
 export default function Register() {
   const [username, setUsername] = useState<string>("");
@@ -22,6 +23,12 @@ export default function Register() {
   const handleSubmit = async (event: FormEvent) => {
     event.preventDefault();
     // Add registration logic here
+
+    await api.post("/api/v1/auth/create-user", {
+      name: username,
+      password: password,
+    });
+
     router.push("/login");
   };
 
