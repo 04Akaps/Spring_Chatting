@@ -11,7 +11,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import { Avatar, AvatarImage } from "./ui/avatar";
-import { User } from "@/app/data";
+import { User, Message } from "@/app/data";
 import React from "react";
 
 import {
@@ -31,34 +31,52 @@ import "@mui/material/styles"; // MUI 스타일 추가
 import api from "@/lib/axios";
 
 interface SidebarProps {
+  me: React.RefObject<string>;
   isCollapsed: boolean;
   links: User[];
   setConnectedUsers: React.Dispatch<React.SetStateAction<User[]>>;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
+  setMessages: React.Dispatch<React.SetStateAction<Message[]>>;
 }
 
 const searchResult = (name: string): User => {
   return {
-    id: 0,
     name,
     messages: [], // 기본값으로 빈 배열
   };
 };
 
-export const fetchUsers = async (searchQuery: string): Promise<User[]> => {
-  const response = await api.get(`/api/v1/user/search/${searchQuery}`);
-  const names = response.data.name;
-  // console.log(names);
+const getCookie = (name: string): string | null => {
+  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
+  if (match) return match[2];
+  return null;
+};
 
-  // ID는 단순히 배열 인덱스를 사용하는 것으로 가정
+export const fetchUsers = async (searchQuery: string): Promise<User[]> => {
+  const token = getCookie("auth");
+
+  if (!token) {
+    throw new Error("Authentication token not found in cookies");
+  }
+
+  const response = await api.get(`/api/v1/user/search/${searchQuery}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  const names = response.data.name;
+
   return names.map((n: string) => searchResult(n));
 };
 
 export function Sidebar({
+  me,
   links,
   isCollapsed,
   setConnectedUsers,
   setSelectedUser,
+  setMessages,
 }: SidebarProps) {
   const [showModal, setShowModal] = React.useState<boolean>(false);
   const [searchQuery, setSearchQuery] = React.useState<string>("");
@@ -89,7 +107,7 @@ export function Sidebar({
     setConnectedUsers((prevUsers) => {
       // user.id가 이미 prevUsers 배열에 있는지 확인
       const userExists = prevUsers.some(
-        (existingUser) => existingUser.id === user.id
+        (existingUser) => existingUser.name === user.name
       );
 
       if (userExists) {
@@ -100,6 +118,20 @@ export function Sidebar({
       // 존재하지 않는 경우에만 추가
       return [...prevUsers, user];
     });
+  };
+
+  const handleChangeChat = async (link: User) => {
+    const result = await api.get("/api/v1/chat/chat-list", {
+      params: {
+        name: link.name,
+        from: me.current,
+      },
+    });
+
+    setMessages(result.data.result);
+
+    window.localStorage.setItem("selectedUser", JSON.stringify(link));
+    setSelectedUser(link);
   };
 
   return (
@@ -197,7 +229,7 @@ export function Sidebar({
                 "dark:bg-muted dark:text-white dark:hover:bg-muted dark:hover:text-white shrink"
               )}
               onClick={() => {
-                setSelectedUser(link);
+                handleChangeChat(link);
               }}
             >
               <div className="flex flex-col max-w-28">

@@ -12,18 +12,24 @@ import React, { useRef, useState } from "react";
 import { buttonVariants } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { AnimatePresence, motion } from "framer-motion";
-import { Message, loggedInUserData } from "@/app/data";
+import { Message, User, loggedInUserData } from "@/app/data";
 import { Textarea } from "../ui/textarea";
 import { EmojiPicker } from "../emoji-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 
 interface ChatBottombarProps {
+  me: React.RefObject<string>;
+  selectedUser: User;
   sendMessage: (newMessage: Message) => void;
 }
 
 export const BottombarIcons = [{ icon: FileImage }, { icon: Paperclip }];
 
-export default function ChatBottombar({ sendMessage }: ChatBottombarProps) {
+export default function ChatBottombar({
+  me,
+  selectedUser,
+  sendMessage,
+}: ChatBottombarProps) {
   const [message, setMessage] = useState("");
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -32,10 +38,10 @@ export default function ChatBottombar({ sendMessage }: ChatBottombarProps) {
   };
 
   const handleSend = () => {
-    if (message.trim()) {
+    if (message.trim() && me.current != null) {
       const newMessage: Message = {
-        id: message.length + 1,
-        name: loggedInUserData.name,
+        from: me.current,
+        to: selectedUser.name,
         message: message.trim(),
       };
       sendMessage(newMessage);

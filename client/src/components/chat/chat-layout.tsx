@@ -1,6 +1,12 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   ResizableHandle,
   ResizablePanel,
@@ -9,9 +15,13 @@ import {
 import { cn } from "@/lib/utils";
 import { Sidebar } from "../sidebar";
 import { Chat } from "./chat";
-import { User } from "@/app/data";
+import { User, Message } from "@/app/data";
 import api from "@/lib/axios";
 import { redirect } from "next/navigation";
+
+import * as StompJs from "@stomp/stompjs";
+import { User, User } from "lucide-react";
+import { useUnmountEffect } from "framer-motion";
 
 interface ChatLayoutProps {
   defaultLayout: number[] | undefined;
@@ -33,24 +43,79 @@ export function ChatLayout({
   const [connectedUsers, setConnectedUsers] = React.useState<User[]>([]);
   const [isCollapsed, setIsCollapsed] = React.useState(defaultCollapsed);
   const [selectedUser, setSelectedUser] = React.useState<User | null>(null);
-  const [me, setMe] = React.useState<User>();
 
-  useEffect(() => {
+  const me = useRef<string>(null);
+
+  const [client, setClient] = React.useState<Client | null>(null);
+
+  const [messagesState, setMessages] = React.useState<Message[]>(
+    selectedUser?.messages ?? [] // selectedUser가 null일 경우 빈 배열을 사용
+  );
+
+  const useMountEffect = () => {
     const authCookie = getCookie("auth");
 
     if (!authCookie) {
       redirect("/login");
+      return;
     }
 
     const verifyAuthToken = async () => {
       const result = await api.get(`/api/v1/auth/verify-token/${authCookie}`);
-      setMe(result.data);
+      me.current = result.data;
     };
 
     verifyAuthToken();
 
-    return () => {};
-  }, []);
+    if (client === null) {
+      const setSocket = async () => {
+        const C = new StompJs.Client({
+          brokerURL: "ws://localhost:7002/ws-stomp",
+          connectHeaders: {
+            Authorization: `Bearer ${authCookie}`,
+          },
+          reconnectDelay: 5000,
+          onConnect: () => {
+            console.log("connected");
+            subscribe(C); // Pass the client instance
+          },
+          onWebSocketError: (error) => {
+            console.log("Error with websocket", error);
+          },
+          onStompError: (frame) => {
+            console.dir(`Broker reported error: ${frame.headers.message}`);
+            console.dir(`Additional details: ${frame}`);
+          },
+        });
+
+        setClient(C); // WebSocket 클라이언트를 저장
+        C.activate();
+      };
+
+      setSocket();
+    }
+  };
+
+  useMountEffect();
+
+  const subscribe = (clientInstance: StompJs.Client) => {
+    console.log("Subscribing...");
+    clientInstance.subscribe(
+      `/sub/chat`,
+      (received_message: StompJs.IFrame) => {
+        const message: Message = JSON.parse(received_message.body);
+        const item = window.localStorage.getItem("selectedUser");
+
+        if (item != null) {
+          const user: User = JSON.parse(item);
+
+          if (message.to == user.name || message.from == user.name) {
+            setMessages((prevMessages) => [...prevMessages, message]);
+          }
+        }
+      }
+    );
+  };
 
   return (
     <ResizablePanelGroup
@@ -86,10 +151,12 @@ export function ChatLayout({
         )}
       >
         <Sidebar
+          me={me}
           isCollapsed={isCollapsed}
           links={connectedUsers}
           setConnectedUsers={setConnectedUsers}
           setSelectedUser={setSelectedUser}
+          setMessages={setMessages}
         />
       </ResizablePanel>
 
@@ -99,6 +166,9 @@ export function ChatLayout({
 
           <ResizablePanel defaultSize={defaultLayout[1]} minSize={30}>
             <Chat
+              messagesState={messagesState}
+              me={me}
+              client={client}
               selectedUser={selectedUser}
               setSelectedUser={setSelectedUser}
             />

@@ -1,5 +1,7 @@
 package com.example.demo.domain.user.controller;
 
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -9,7 +11,7 @@ import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
 
 import com.example.demo.domain.user.service.UserService;
-
+import com.example.demo.security.JWTProvider;
 import com.example.demo.domain.user.model.request.*;
 import com.example.demo.domain.user.model.response.*;
 
@@ -27,9 +29,14 @@ public class UserControllerV1 {
     )
     @GetMapping("/search/{name}")
     public UserSearchResponse searchUser(
-        @PathVariable("name") String name
+        @PathVariable("name") String name,
+        @RequestHeader("Authorization") String authorizationHeader
     ) {
-        return userService.searchUser(name);
+
+        String token = JWTProvider.extractToken(authorizationHeader);
+        String user = JWTProvider.getUserNameFromJwt(token);
+
+        return userService.searchUser(name, user);
     }
 
 }

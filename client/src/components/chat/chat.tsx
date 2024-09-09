@@ -2,20 +2,34 @@ import { Message, User } from "@/app/data";
 import ChatTopbar from "./chat-topbar";
 import { ChatList } from "./chat-list";
 import React from "react";
+import { Client } from "@stomp/stompjs";
 
 interface ChatProps {
+  messagesState: Message[];
+  me: React.RefObject<string>;
+  client: Client;
   selectedUser: User;
   setSelectedUser: React.Dispatch<React.SetStateAction<User | null>>;
 }
 
-export function Chat({ selectedUser, setSelectedUser }: ChatProps) {
+export function Chat({
+  messagesState,
+  me,
+  client,
+  selectedUser,
+  setSelectedUser,
+}: ChatProps) {
   // selectedUser가 null인 경우, 빈 배열로 초기화
-  const [messagesState, setMessages] = React.useState<Message[]>(
-    selectedUser?.messages ?? [] // selectedUser가 null일 경우 빈 배열을 사용
-  );
 
   const sendMessage = (newMessage: Message) => {
-    setMessages((prevMessages) => [...prevMessages, newMessage]);
+    if (client) {
+      client.publish({
+        destination: `/pub/chat/message/${me.current}`,
+        body: JSON.stringify(newMessage),
+      });
+
+      console.log(`> Send message: ${newMessage}`);
+    }
   };
 
   return (
@@ -26,6 +40,7 @@ export function Chat({ selectedUser, setSelectedUser }: ChatProps) {
       />
 
       <ChatList
+        me={me}
         messages={messagesState}
         selectedUser={selectedUser} // selectedUser가 null일 수 있음
         sendMessage={sendMessage}

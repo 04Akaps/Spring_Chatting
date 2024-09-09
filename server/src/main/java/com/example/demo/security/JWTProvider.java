@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Date;
+import org.springframework.util.StringUtils;
 
 import static org.apache.commons.lang3.StringUtils.removeStart;
 
@@ -106,5 +107,12 @@ public class JWTProvider {
     public static String getToken(HttpServletRequest request){
         String authorization = request.getHeader("Authorization");
         return removeStart(authorization, "Bearer ");
+    }
+
+    public static String extractToken(String authorizationHeader) {
+        if (StringUtils.hasText(authorizationHeader) && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        throw new IllegalArgumentException("Invalid Authorization header");
     }
 }

@@ -15,6 +15,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByName(String name);
     boolean existsByName(String username);
 
-    @Query("SELECT u.name FROM User u WHERE LOCATE(LOWER(:pattern), LOWER(u.name)) > 0")
-    List<String> findNamesByPartialNameMatch(@Param("pattern") String pattern);
+    @Query("SELECT u.name FROM User u WHERE LOCATE(LOWER(:pattern), LOWER(u.name)) > 0 AND u.name != :user")
+    List<String> findNamesByPartialNameMatch(@Param("pattern") String pattern, @Param("user") String user);
 }

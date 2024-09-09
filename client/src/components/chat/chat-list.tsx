@@ -4,14 +4,17 @@ import React, { useRef } from "react";
 import { Avatar, AvatarImage } from "../ui/avatar";
 import ChatBottombar from "./chat-bottombar";
 import { AnimatePresence, motion } from "framer-motion";
+import { Client } from "@stomp/stompjs";
 
 interface ChatListProps {
+  me: React.RefObject<string>;
   messages?: Message[];
   selectedUser: User;
   sendMessage: (newMessage: Message) => void;
 }
 
 export function ChatList({
+  me,
   messages,
   selectedUser,
   sendMessage,
@@ -53,21 +56,21 @@ export function ChatList({
               }}
               className={cn(
                 "flex flex-col gap-2 p-4 whitespace-pre-wrap",
-                message.name !== selectedUser.name ? "items-end" : "items-start"
+                message.from !== selectedUser.name ? "items-end" : "items-start"
               )}
             >
               <div className="flex gap-3 items-center">
-                {message.name === selectedUser.name && (
+                {message.from === selectedUser.name && (
                   <Avatar className="flex justify-center items-center">
-                    <AvatarImage alt={message.name} width={6} height={6} />
+                    <AvatarImage alt={message.from} width={6} height={6} />
                   </Avatar>
                 )}
                 <span className=" bg-accent p-3 rounded-md max-w-xs">
                   {message.message}
                 </span>
-                {message.name !== selectedUser.name && (
+                {message.from !== selectedUser.name && (
                   <Avatar className="flex justify-center items-center">
-                    <AvatarImage alt={message.name} width={6} height={6} />
+                    <AvatarImage alt={message.from} width={6} height={6} />
                   </Avatar>
                 )}
               </div>
@@ -75,7 +78,11 @@ export function ChatList({
           ))}
         </AnimatePresence>
       </div>
-      <ChatBottombar sendMessage={sendMessage} />
+      <ChatBottombar
+        me={me}
+        selectedUser={selectedUser}
+        sendMessage={sendMessage}
+      />
     </div>
   );
 }

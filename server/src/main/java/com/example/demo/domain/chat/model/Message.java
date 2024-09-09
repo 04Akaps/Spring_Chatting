@@ -10,7 +10,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Message {
-    private String to; // 방번호
+    private String to; //  받는 사람
     private String from; // 메시지 보낸사람
     private String message; // 메시지
 }

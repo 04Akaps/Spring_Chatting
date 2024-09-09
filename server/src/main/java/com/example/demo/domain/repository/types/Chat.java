@@ -10,17 +10,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
-
+// (access = AccessLevel.PROTECTED)
 @Getter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
 @Entity
 @Table(name="chat")
 public class Chat {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long t_id;
+    @Column(name = "t_id")
+    private Long TID;
 
     @Column
     private String sender;

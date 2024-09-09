@@ -16,6 +16,7 @@ export default function ChatTopbar({
   setSelectedUser,
 }: ChatTopbarProps) {
   const close = (event: any) => {
+    window.localStorage.removeItem("selectedUser");
     setSelectedUser(null);
   };
 
@@ -39,8 +40,6 @@ export default function ChatTopbar({
       <span onClick={close}>
         <CloseIcon />
       </span>
-      {/* <Cancel
-      <div>ㅅㄷㄴㅅ</div> */}
     </div>
   );
 }

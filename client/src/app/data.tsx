@@ -9,13 +9,12 @@ export const loggedInUserData = {
 export type LoggedInUserData = typeof loggedInUserData;
 
 export interface Message {
-  id: number;
-  name: string;
+  to: string;
+  from: string;
   message: string;
 }
 
 export type User = {
-  id: number;
   messages: Message[];
   name: string;
 };
